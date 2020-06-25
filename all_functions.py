@@ -7,7 +7,6 @@ from sklearn.model_selection import train_test_split
 import pandas as pd
 from string import digits
 import numpy as np
-import requests
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer, ENGLISH_STOP_WORDS
 from sklearn.model_selection import train_test_split
 import nltk
@@ -30,6 +29,14 @@ def get_html_from_link(page_link):
     return soup
 
 def collecte_rating(soup):
+    '''
+        Extract movies ratings from web page and parse it.
+
+        :param soup: BeautifulSoup object (HTML parsed)
+        :type soup: bs4.BeautifulSoup
+        :return: df_rating : dataframe with ratings
+        :rtype: DataFrame
+    '''
     movies_rating = []
     for element in soup.find_all('td', {"class" : "ratingColumn imdbRating"}):
         movies_rating.append(element.text)
@@ -39,6 +46,14 @@ def collecte_rating(soup):
     return df_rating
 
 def collecte_titles_links(soup):
+    '''
+        Extract movies titles and links from web page and parse it.
+
+        :param soup: BeautifulSoup object (HTML parsed)
+        :type soup: bs4.BeautifulSoup
+        :return: df_titles : dataframe with movies_titles and movies_links
+        :rtype: DataFrame
+    '''
     url = "https://www.imdb.com/"
     movies_titles = []
     movies_links = []
@@ -61,14 +76,12 @@ def collecte_titles_links(soup):
 
 def extract_movie_info(movie_html):
     '''
-        Extract book infos from URL BOOK HTML
+        Extract movie info from movie_html
 
-        :param book_html: BeautifulSoup Element that contains book infos
-        :type book_html: bs4.element.Tag
-        :return:
-            - book_title : title of the book
-            - book_image_link: link to the image of the book
-        :rtype: tuple(string, string, string)
+        :param movie_html: BeautifulSoup Element that contains all movies links
+        :type movie_html: bs4.BeautifulSoup
+        :return: DataFrame with the names of the DirectorS, Writters, actors, titles for each movies
+        :rtype: DataFrame
     '''
 
     # TODO : get book_title, book_rating and book_author from book_html and return this tuple
@@ -85,16 +98,13 @@ def extract_movie_info(movie_html):
 
 def extract_budget(movie_html):
     '''
-        Extract book infos from URL BOOK HTML
+        Extract movie budget from movie_html
 
-        :param book_html: BeautifulSoup Element that contains book infos
-        :type book_html: bs4.element.Tag
-        :return:
-            - book_title : title of the book
-            - book_image_link: link to the image of the book
-        :rtype: tuple(string, string, string)
+        :param movie_html: BeautifulSoup Element that contains all movies links
+        :type movie_html: bs4.BeautifulSoup
+        :return: the budget of a movie
+        :rtype: int
     '''
-    
     budget = 0
     for div in movie_html.find_all('div', {'class' : 'txt-block'}):
         
@@ -105,15 +115,14 @@ def extract_budget(movie_html):
 
 def extract_country(movie_html):
     '''
-        Extract book infos from URL BOOK HTML
+        Extract movie country from movie_html
 
-        :param book_html: BeautifulSoup Element that contains book infos
-        :type book_html: bs4.element.Tag
-        :return:
-            - book_title : title of the book
-            - book_image_link: link to the image of the book
-        :rtype: tuple(string, string, string)
+        :param movie_html: BeautifulSoup Element that contains all movies links
+        :type movie_html: bs4.BeautifulSoup
+        :return: the country of a movie
+        :rtype: String
     '''
+
     country=[]
     for link in movie_html.find_all("a"):
         try:
@@ -125,14 +134,12 @@ def extract_country(movie_html):
 
 def extract_synopsis(movie_html):
     '''
-        Extract book infos from URL BOOK HTML
+        Extract movie synopsis from movie_html
 
-        :param book_html: BeautifulSoup Element that contains book infos
-        :type book_html: bs4.element.Tag
-        :return:
-            - book_title : title of the book
-            - book_image_link: link to the image of the book
-        :rtype: tuple(string, string, string)
+        :param movie_html: BeautifulSoup Element that contains all movies links
+        :type movie_html: bs4.BeautifulSoup
+        :return: the synopsis of a movie
+        :rtype: String
     '''
 
     link = movie_html.find("div", {"class": "inline canwrap"})
@@ -140,6 +147,15 @@ def extract_synopsis(movie_html):
     return(synopsis)
 
 def extract_all_infos(df):
+    '''
+        Extract all infos of a movie from a dataframe of links for each movie
+
+        :param df: DataFrame with movies titles and movies links
+        :type df: DataFrame
+        :return: DataFrame with all informations since to all functions above
+        :rtype: DataFrame
+    '''
+
     budget=[]
     synopsis=[]
     country=[]
@@ -173,6 +189,14 @@ sklearn_stowords = set(ENGLISH_STOP_WORDS)
 STOP_WORDS = nltk_stopwords.union(sklearn_stowords)
 
 def remove_digits(text):
+    '''
+        Remove digits from text
+
+        :param text: text like synopsis in our case 
+        :type df: String
+        :return: text without digits
+        :rtype: String
+    '''
     remove_digits = str.maketrans('', '', digits)
     res = text.lower().translate(remove_digits)
     return res
@@ -180,6 +204,15 @@ def remove_digits(text):
 stem = nltk.stem.snowball.EnglishStemmer()
 
 def remove_tiny_words(text):
+    '''
+        Remove words with length lower than 2 from text
+
+        :param text: text like synopsis in our case 
+        :type df: String
+        :return: text without tiny words
+        :rtype: String
+    '''
+
     new_text = ""
     for word in text.split():
         if len(word) > 2:
@@ -187,6 +220,15 @@ def remove_tiny_words(text):
     return new_text
 
 def remove_digits_tiny(df):
+    '''
+        Remove words with length lower than 2 and digits from text since to the 2 functions above
+
+        :param df: dataframe with all movies informations
+        :type df: DataFrame
+        :return: df without digits and tiny words in the column synopsis and movies_titles
+        :rtype: DataFrame
+    '''
+
     new_synopsis =[]
     acteurs_scenaristes_directeur=[]
     new_titre = []
@@ -205,6 +247,14 @@ def remove_digits_tiny(df):
     return(df)
 
 def vectorize_df(df):
+    '''
+        Vectorize movie DataFrame
+
+        :param df: dataframe with all movies informations
+        :type df: DataFrame
+        :return: X_vectorized wich is vectorized
+        :rtype: DataFrame
+    '''
     cv = CountVectorizer(lowercase=True, 
                      stop_words=STOP_WORDS, 
                      ngram_range=(1, 2), 
