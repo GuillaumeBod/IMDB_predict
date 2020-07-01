@@ -279,3 +279,17 @@ def vectorize_df(df):
                                                                                                 "new_titre"], axis =1)
 
     return X_vectorized
+
+
+def modify_ratings(df):
+    ratings = []
+    for rating in df["rating"]:
+        if type(rating) != 'float':
+            one, two = rating.split(",")
+            ratings.append(one +"."+two)
+
+    df_ratings = pd.DataFrame({"ratings":ratings})
+
+    df_ratings = df_ratings.astype(np.float16)
+
+    return df_ratings
